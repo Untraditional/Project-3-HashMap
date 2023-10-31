@@ -7,6 +7,8 @@ package project3;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 import javafx.event.ActionEvent;
@@ -21,6 +23,9 @@ import javafx.stage.FileChooser.ExtensionFilter;
 public class Project3FXMLController implements Initializable {
 
     FileChooser fileChooser = new FileChooser();
+    // Create a hashmap to hold <keyword, count> intially going to be 0 for count
+    Map<String,Integer> frequencyMap = new HashMap<>();
+    
     @FXML
     private Button inputFileButton;
     @FXML
@@ -47,15 +52,24 @@ public class Project3FXMLController implements Initializable {
                 }
                 scanner.close();
                 textArea.setText(fileCont.toString());
+                
+                // add each of the entries from keywords.java to frequencyMap
+                String[] words = fileCont.toString().split("\\W+");
+                for(String word : words){
+                    frequencyMap.put(word, 0);
+                }
+                
+                // Going to change so output text is instead the frequency map
             }
             catch (FileNotFoundException e){
                 e.printStackTrace();
             }
-            
-            
         }
-        
+    } // end of inputFileToProgram
+
+    @FXML
+    private void compareFile(ActionEvent event) {
+        fileChooser.getExtensionFilters().add(new ExtensionFilter("Java Files","*.java"));
+        File file = fileChooser.showOpenDialog(null);
     }
-    
-    
 }
