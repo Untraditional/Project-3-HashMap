@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/javafx/FXMLController.java to edit this template
- */
+// Created by Alex Parsons
 package project3;
 
 import java.io.File;
@@ -11,65 +8,82 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Scanner;
-import javafx.event.ActionEvent;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.ListView;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 
 public class Project3FXMLController implements Initializable {
-
-    FileChooser fileChooser = new FileChooser();
-    // Create a hashmap to hold <keyword, count> intially going to be 0 for count
-    Map<String,Integer> frequencyMap = new HashMap<>();
+    @FXML
+    private ListView<String> listViewArea;
     
-    @FXML
-    private Button inputFileButton;
-    @FXML
-    private TextArea textArea;
-    @FXML
-    private Button inputCompareFile;
-
+    private final FileChooser fileChooser = new FileChooser();
+    private final Map<String,Integer> frequencyMap = new HashMap<>(); // Create a hashmap to hold <keyword, count> intially going to be 0 for count
+    private final String keywordsFilePath = "C:\\Users\\Alex\\Documents\\UMD Classes\\Fall 2023\\CIS 296 - Java Programming\\Homework\\Project-3-HashMap\\Project 3\\src\\project3\\keywords.java";
+    private final ObservableList<String> listViewData = FXCollections.observableArrayList();
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-       fileChooser.setInitialDirectory(new File("C:\\Users\\Alex\\Documents\\UMD Classes\\Fall 2023\\CIS 296 - Java Programming\\Homework\\Project-3-HashMap\\Project 3\\src\\project3"));
-    }    
-
-    @FXML
-    private void inputFileToProgram(ActionEvent event) {
-        fileChooser.getExtensionFilters().add(new ExtensionFilter("Java Files","*.java"));
-        File file = fileChooser.showOpenDialog(null);
-        if (file != null){
-            try{
-                Scanner scanner = new Scanner(file);
-                StringBuilder fileCont = new StringBuilder();
-                while (scanner.hasNextLine()){
-                    fileCont.append(scanner.nextLine()).append("\n");
-                }
-                scanner.close();
-                textArea.setText(fileCont.toString());
-                
-                // add each of the entries from keywords.java to frequencyMap
-                String[] words = fileCont.toString().split("\\W+");
-                for(String word : words){
+        // loading in the keywords from file
+        loadKeywords(); 
+    } // end of initialize
+    
+    // function to load keywords in from file
+    private void loadKeywords(){
+        File fin = new File(keywordsFilePath);
+        try (Scanner scanner = new Scanner(fin)){
+            scanner.useDelimiter("\\W+");
+            while(scanner.hasNext()){
+                String word = scanner.next();
+                if(!word.isEmpty()){
                     frequencyMap.put(word, 0);
                 }
-                
-                // Going to change so output text is instead the frequency map
             }
-            catch (FileNotFoundException e){
-                e.printStackTrace();
-            }
+        } catch (FileNotFoundException e){
         }
-    } // end of inputFileToProgram
+    } // end of loadKeywords()
+    
+    private void updateListViewOutput(){       
+        listViewData.clear(); // clear out old list information
+        frequencyMap.forEach((word, count) -> {
+            if (count > 0){
+                listViewData.add(word + " : " + count);// go through the frequencyMap adding to the observable array list ListViewData if count is greater than 0
+            }
+        });
+        listViewArea.setItems(listViewData); // output the observable array list to the listViewArea
+    } // end of updateLsitViewOutput()
+    
+    // A function that resets the values stored in the hashmap, incase user wants to keep comparing files.
+    private void resetHashMapCounts(){
+        for (String key : frequencyMap.keySet()){
+            frequencyMap.put(key, 0);
+        }
+    } // end of resetHashMapCounts()
 
     @FXML
-    private void compareFile(ActionEvent event) {
-        fileChooser.getExtensionFilters().add(new ExtensionFilter("Java Files","*.java"));
+    private void compareFile() {
+        //Setting default directory to be the project folder
+        fileChooser.setInitialDirectory(new File("C:\\Users\\Alex\\Documents\\UMD Classes\\Fall 2023\\CIS 296 - Java Programming\\Homework\\Project-3-HashMap\\Project 3\\src\\project3"));
+        fileChooser.getExtensionFilters().add(new ExtensionFilter("Java Files","*.java")); // only looking for .java 
         File file = fileChooser.showOpenDialog(null);
-    }
+        
+        if(file!=null){
+            resetHashMapCounts(); // reset frequency counts back to 0 on input file load
+            try(Scanner scanner = new Scanner(file)){
+                scanner.useDelimiter("\\W+");
+                while(scanner.hasNext()){
+                    String word = scanner.next();
+                    if (frequencyMap.containsKey(word)){
+                        frequencyMap.put(word,frequencyMap.get(word)+ 1);
+                    }
+                }
+            } catch (FileNotFoundException e){
+            }
+            updateListViewOutput(); // update the listView
+        }
+    } // end of compare file
 }
